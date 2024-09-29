@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Ventas</title>
+    <!-- Incluye la librería XLSX.js desde CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        table {
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+        button {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Registro de Ventas de Demostradoras</h1>
+
+<!-- Menú de Demostradoras -->
+<select id="demostradoraSelect" onchange="selectDemostradora()">
+    <option value="">Selecciona una demostradora</option>
+    <option value="Demostradora 1">Demostradora 1</option>
+    <option value="Demostradora 2">Demostradora 2</option>
+    <option value="Demostradora 3">Demostradora 3</option>
+    <option value="Demostradora 4">Demostradora 4</option>
+    <option value="Demostradora 5">Demostradora 5</option>
+</select>
+
+<!-- Menú de Tiendas -->
+<select id="tiendaSelect" style="display:none;" onchange="selectTienda()">
+    <option value="">Selecciona una tienda</option>
+    <option value="Tienda 1">Tienda 1</option>
+    <option value="Tienda 2">Tienda 2</option>
+    <option value="Tienda 3">Tienda 3</option>
+    <option value="Tienda 4">Tienda 4</option>
+    <option value="Tienda 5">Tienda 5</option>
+</select>
+
+<!-- Formulario de Registro -->
+<table border="1">
+    <tr>
+        <th>Producto</th>
+        <th>Existencia</th>
+        <th>Precio</th>
+        <th>Vendidos (piezas o cajas)</th>
+        <th>Comentarios</th>
+        <th>Fecha</th>
+    </tr>
+    <tr>
+        <td><input type="text" id="producto"></td>
+        <td><input type="number" id="existencia"></td>
+        <td><input type="number" id="precio"></td>
+        <td><input type="number" id="vendidos"></td>
+        <td><input type="text" id="comentarios"></td>
+        <td><input type="date" id="fecha"></td>
+    </tr>
+</table>
+
+<!-- Botones de Acción -->
+<button onclick="saveData()">Guardar Registro</button>
+<button onclick="downloadExcel()">Descargar Excel</button>
+
+<script>
+    let data = {};  // Objeto para almacenar los datos registrados
+    let selectedDemostradora = '';
+    let selectedStore = '';
+
+    // Función para seleccionar una demostradora
+    function selectDemostradora() {
+        selectedDemostradora = document.getElementById('demostradoraSelect').value;
+        if (selectedDemostradora) {
+            document.getElementById('tiendaSelect').style.display = 'inline';
+        } else {
+            document.getElementById('tiendaSelect').style.display = 'none';
+        }
+    }
+
+    // Función para seleccionar una tienda
+    function selectTienda() {
+        selectedStore = document.getElementById('tiendaSelect').value;
+    }
+
+    // Función para guardar los datos del registro
+    function saveData() {
+        let producto = document.getElementById('producto').value;
+        let existencia = document.getElementById('existencia').value;
+        let precio = document.getElementById('precio').value;
+        let vendidos = document.getElementById('vendidos').value;
+        let comentarios = document.getElementById('comentarios').value;
+        let fecha = document.getElementById('fecha').value;
+
+        if (!selectedDemostradora || !selectedStore) {
+            alert('Por favor selecciona una demostradora y una tienda.');
+            return;
+        }
+
+        if (!data[selectedDemostradora]) {
+            data[selectedDemostradora] = {};
+        }
+
+        if (!data[selectedDemostradora][selectedStore]) {
+            data[selectedDemostradora][selectedStore] = [];
+        }
+
+        data[selectedDemostradora][selectedStore].push({
+            producto, existencia, precio, vendidos, comentarios, fecha
+        });
+
+        alert('Registro guardado!');
+    }
+
+    // Función para descargar los datos registrados en un archivo Excel
+    function downloadExcel() {
+        let wb = XLSX.utils.book_new();
+
+        for (const demostradora in data) {
+            let sheetData = [];
+            for (const tienda in data[demostradora]) {
+                // Agregar el título de la tienda
+                sheetData.push([`Tienda: ${tienda}`]);
+                // Agregar encabezados
+                sheetData.push(['Producto', 'Existencia', 'Precio', 'Vendidos', 'Comentarios', 'Fecha']);
+                // Agregar los datos registrados para cada tienda
+                data[demostradora][tienda].forEach(row => {
+                    sheetData.push([row.producto, row.existencia, row.precio, row.vendidos, row.comentarios, row.fecha]);
+                });
+                // Agregar un espacio entre tiendas
+                sheetData.push([]);
+            }
+
+            // Crear una nueva hoja y agregarla al libro
+            let ws = XLSX.utils.aoa_to_sheet(sheetData);
+            XLSX.utils.book_append_sheet(wb, ws, demostradora);
+        }
+
+        // Generar y descargar el archivo Excel
+        XLSX.writeFile(wb, 'registro_demostradoras.xlsx');
+    }
+</script>
+
+</body>
+</html>
